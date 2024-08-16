@@ -3,7 +3,12 @@ package red.jackf.chesttracker.impl.rendering;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.phys.Vec3;
 import red.jackf.chesttracker.api.memory.Memory;
 import red.jackf.chesttracker.api.memory.MemoryKey;
 import red.jackf.chesttracker.api.providers.ProviderUtils;
@@ -16,6 +21,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class NameRenderer {
+
     public static void setup() {
         WorldRenderEvents.BEFORE_BLOCK_OUTLINE.register((context, hitResult) -> {
             MemoryBankAccessImpl.INSTANCE.getLoadedInternal().ifPresent(bank -> {
@@ -36,8 +42,41 @@ public class NameRenderer {
             if (entry.getKey().distToCenterSqr(context.camera().getPosition()) < maxRangeSq) {
                 Component name = entry.getValue().renderName();
                 if (name == null) continue;
-                RenderUtils.scheduleLabelRender(entry.getValue().getCenterPosition(entry.getKey()).add(0, 1, 0), entry.getValue().renderName());
+
+                BlockPos blockPos = entry.getKey();
+                Vec3 facingOffset = getFacingOffset(context, blockPos);
+                Vec3 renderPos = entry.getValue().getCenterPosition(blockPos).add(facingOffset);
+
+                RenderUtils.scheduleLabelRender(renderPos, name);
             }
+        }
+    }
+
+    private static Vec3 getFacingOffset(WorldRenderContext context, BlockPos blockPos) {
+        BlockState blockState = context.world().getBlockState(blockPos);
+        BlockPos aboveBlockPos = blockPos.above();
+        BlockState aboveBlockState = context.world().getBlockState(aboveBlockPos);
+        if (aboveBlockState.isAir()) {
+            return new Vec3(0,1,0);
+        } else if (blockState.hasProperty(BlockStateProperties.FACING)) {
+            Direction facing = blockState.getValue(BlockStateProperties.FACING);
+            return switch (facing) {
+                case NORTH -> new Vec3(0, 0, -1);
+                case SOUTH -> new Vec3(0, 0, 1);
+                case WEST -> new Vec3(-1, 0, 0);
+                case EAST -> new Vec3(1, 0, 0);
+                case UP -> new Vec3(0, 1, 0);
+                case DOWN -> new Vec3(0, -1, 0);
+            };
+        } else {
+            Direction facing = blockState.getValue(BlockStateProperties.HORIZONTAL_FACING);
+            return switch (facing) {
+                case NORTH -> new Vec3(0, 0, -1);
+                case SOUTH -> new Vec3(0, 0, 1);
+                case WEST -> new Vec3(-1, 0, 0);
+                case EAST -> new Vec3(1, 0, 0);
+                default -> Vec3.ZERO;
+            };
         }
     }
 }
