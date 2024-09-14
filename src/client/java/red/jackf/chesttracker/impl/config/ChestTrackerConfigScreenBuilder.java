@@ -309,6 +309,16 @@ public class ChestTrackerConfigScreenBuilder {
                         .description(OptionDescription.of(translatable("chesttracker.config.whereisit.description")))
                         .text(translatable("chesttracker.gui.open"))
                         .action((yaclScreen, button) -> Minecraft.getInstance().setScreen(WhereIsItConfigScreenBuilder.build(yaclScreen))).build())
+                .option(Option.<Boolean>createBuilder()
+                        .name(translatable("chesttracker.config.rendering.renderPos"))
+                        .description(OptionDescription.of(translatable("chesttracker.config.rendering.renderPos.description")))
+                        .controller(opt -> BooleanControllerBuilder.create(opt)
+                                .yesNoFormatter()
+                                .coloured(true))
+                        .binding(instance.defaults().rendering.renderPos,
+                                () -> instance.instance().rendering.renderPos,
+                                p -> instance.instance().rendering.renderPos = p)
+                        .build())
                 .build();
     }
 

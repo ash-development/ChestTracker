@@ -94,6 +94,9 @@ public class ChestTrackerConfig {
     public static class Rendering {
         @SerialEntry(comment = "Name Render Range. Range: [4, 24] blocks")
         public int nameRange = 12;
+
+        @SerialEntry(comment = "Whether to render the position of the label above or below the container.")
+        public Boolean renderPos = false;
     }
 
     public static class Debug {
